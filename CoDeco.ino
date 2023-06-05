@@ -43,15 +43,12 @@
 
 #define Tx1 50
 #define Rx1 51
-#define LedTxRx1 A1
 
 #define Tx2 52
 #define Rx2 53
-#define LedTxRx2 39
 
 int d1, d2, d3, d4;
 int c[8]={0,0,0,0,0,0,0,0};
-int cr[8]={0,0,0,0,0,0,0,0};
 int e[8]={0,0,0,0,0,0,0,0};
 int r[8]={0,0,0,0,0,0,0,0};
 int rr[8]={0,0,0,0,0,0,0,0};
@@ -73,8 +70,7 @@ void setup() {
   pinMode(E6, INPUT);  
   pinMode(E7, INPUT); 
 
-  pinMode(Config, INPUT);    
-
+  
   pinMode(C1, OUTPUT);
   pinMode(C2, OUTPUT);  
   pinMode(C3, OUTPUT);
@@ -106,20 +102,22 @@ void setup() {
 
   pinMode(Tx1, OUTPUT);
   pinMode(Rx1, INPUT);
-  pinMode(LedTxRx1, OUTPUT);  
+
+  pinMode(Config, INPUT);    
 
   pinMode(Tx2, OUTPUT);
   pinMode(Rx2, INPUT);
-  pinMode(LedTxRx2 , OUTPUT);
 }
 
 void loop() {
   codificador();
  
   if(digitalRead(Config)==1){
-    reiniciar();
+    int cr[8]={0,0,0,0,0,0,0,0};
     int contador = 0;
     int contadorLed = R1;
+    reiniciar();
+
     e[0] = digitalRead(E1);
     e[1] = digitalRead(E2);
     e[2] = digitalRead(E3); 
@@ -129,32 +127,31 @@ void loop() {
     e[6] = digitalRead(E7); 
     
     for(int i=0; i<7; i++){
-      digitalWrite(LedTxRx1, HIGH);
-      delay(1000);
-      
       digitalWrite(Tx1,c[i]); 
       cr[i]=digitalRead(Rx1);  
+      Serial.print(cr[i]);
+      delay(1000);
+
       r[contador] = e[contador] ^ cr[contador];
       digitalWrite(contadorLed, r[contador]);
       
       contador = contador + 1;
       contadorLed = contadorLed + 2;
-      
-      digitalWrite(LedTxRx1, LOW);
+
+      delay(1000);
+    }
+    digitalWrite(Tx1,LOW);
+
+    delay(1500);
+
+    for(int i=0; i<7; i++){
+      digitalWrite(Tx2,r[i]);
+      rr[i]=digitalRead(Rx2);
       delay(1000);
     }
 
-    for(int i=0; i<7; i++){
-      digitalWrite(LedTxRx2, HIGH);
-      delay(1000);
-      
-      digitalWrite(Tx2,r[i]);
-      rr[i]=digitalRead(Rx2);
-      calcularSindrome();
-      
-      digitalWrite(LedTxRx2, LOW);
-      delay(1000);
-    }
+    digitalWrite(Tx2,LOW);
+    calcularSindrome();
     correcionError();
   }  
 }
@@ -301,6 +298,7 @@ void correcionError(){
 }
 
 void reiniciar(){
+
   int salida= R1;  
   for(int i = 0; i < 7; i++){
     digitalWrite(salida,LOW);
